@@ -24,9 +24,11 @@ def load_dataset(dataset_path, ob_dtype=np.float32, action_dtype=np.float32, com
         'terminals', and 'next_observations' (if `compact_dataset` is False) or 'valids' (if `compact_dataset` is True).
     """
     file = np.load(dataset_path)
+    keys = list(file.keys())
 
     dataset = dict()
-    for k in ['observations', 'actions', 'terminals']:
+    #for k in ['observations', 'actions', 'terminals']:
+    for k in keys: # To load all keys in the dataset
         if k == 'observations':
             dtype = ob_dtype
         elif k == 'actions':
@@ -60,6 +62,7 @@ def load_dataset(dataset_path, ob_dtype=np.float32, action_dtype=np.float32, com
         new_terminals = np.concatenate([dataset['terminals'][1:], [1.0]])
         dataset['terminals'] = np.minimum(dataset['terminals'] + new_terminals, 1.0).astype(np.float32)
     else:
+        raise NotImplementedError(f"compact_dataset={compact_dataset} is not supported.")
         # Regular dataset: Generate `next_observations` by shifting `observations`.
         # Our goal is to have the following structure:
         #                       |<- traj 1 ->|  |<- traj 2 ->|  ...

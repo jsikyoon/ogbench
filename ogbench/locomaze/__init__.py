@@ -1,4 +1,5 @@
 from gymnasium.envs.registration import register
+from .maze import make_maze_env
 
 visual_dict = dict(
     ob_type='pixels',

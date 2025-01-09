@@ -40,7 +40,8 @@ def make_maze_env(loco_env_type, maze_env_type, *args, **kwargs):
             maze_height=0.5,
             terminate_at_goal=True,
             ob_type='states',
-            add_noise_to_goal=True,
+            #add_noise_to_goal=True,
+            add_noise_to_goal=False, # Remove the randomness in the goal position.
             *args,
             **kwargs,
         ):
@@ -325,6 +326,20 @@ def make_maze_env(loco_env_type, maze_env_type, *args, **kwargs):
             else:
                 raise ValueError(f'Unknown maze type: {self._maze_type}')
 
+            # More diverse task generation based on the maze map
+            visitable_positions = []
+            for i in range(self.maze_map.shape[0]):
+                for j in range(self.maze_map.shape[1]):
+                    if self.maze_map[i, j] == 0:
+                        visitable_positions.append((i, j))
+            # Combinations
+            tasks = []
+            for i in range(len(visitable_positions)):
+                for j in range(i + 1, len(visitable_positions)):
+                    tasks.append([visitable_positions[i], visitable_positions[j]])
+                    tasks.append([visitable_positions[j], visitable_positions[i]])
+            print(f"The number of tasks is {len(tasks)}. The Task ID should be in [1, {len(tasks)}].")
+
             self.task_infos = []
             for i, task in enumerate(tasks):
                 self.task_infos.append(
@@ -336,6 +351,12 @@ def make_maze_env(loco_env_type, maze_env_type, *args, **kwargs):
                         goal_xy=self.ij_to_xy(task[1]),
                     )
                 )
+
+        def set_task(self, task_id):
+            assert 1 <= task_id <= self.num_tasks, f'Task ID must be in [1, {self.num_tasks}].'
+            self.cur_task_id = task_id
+            self.cur_task_info = self.task_infos[task_id - 1]
+            print(f'Task {task_id} is set: {self.cur_task_info}')
 
         def reset(self, options=None, *args, **kwargs):
             if options is None:
@@ -351,9 +372,13 @@ def make_maze_env(loco_env_type, maze_env_type, *args, **kwargs):
                 self.cur_task_id = None
                 self.cur_task_info = options['task_info']
             else:
-                # Randomly sample a task.
-                self.cur_task_id = np.random.randint(1, self.num_tasks + 1)
-                self.cur_task_info = self.task_infos[self.cur_task_id - 1]
+                if self.cur_task_id is None:
+                    # Randomly sample a task.
+                    self.cur_task_id = np.random.randint(1, self.num_tasks + 1)
+                    self.cur_task_info = self.task_infos[self.cur_task_id - 1]
+                else:
+                    # Use the current task.
+                    pass
 
             # Whether to provide a rendering of the goal.
             render_goal = False
@@ -361,7 +386,8 @@ def make_maze_env(loco_env_type, maze_env_type, *args, **kwargs):
                 render_goal = options['render_goal']
 
             # Get initial and goal positions with noise.
-            init_xy = self.add_noise(self.ij_to_xy(self.cur_task_info['init_ij']))
+            #init_xy = self.add_noise(self.ij_to_xy(self.cur_task_info['init_ij']))
+            init_xy = self.ij_to_xy(self.cur_task_info['init_ij'])
             goal_xy = self.ij_to_xy(self.cur_task_info['goal_ij'])
             if self._add_noise_to_goal:
                 goal_xy = self.add_noise(goal_xy)

@@ -92,7 +92,9 @@ class PointEnv(MujocoEnv, utils.EzPickle):
         )
 
     def get_ob(self):
-        return self.data.qpos.flat.copy()
+        #return self.data.qpos.flat.copy()
+        # Return the full state [qpos, qvel]
+        return np.concatenate([self.data.qpos.flat.copy(), self.data.qvel.flat.copy()])
 
     def reset_model(self):
         qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.1, high=0.1)
