@@ -3,7 +3,8 @@ import os
 sys.path.insert(0, "/home/hyeons/workspace/ogbench") # Path to local ogbench
 sys.path.append("../impls") 
 os.environ["MUJOCO_GL"] = "egl"
-# command python generate_locomaze.py --env_name=visual-pointmaze-giant-v0 --save_path=data/visual-pointmaze-giant-navigate-v0.npz --dataset_type=navigate --num_episodes=500 --max_episode_steps=2001 --noise=0.5
+# python generate_locomaze.py --env_name=visual-pointmaze-giant-v0 --save_path=data/visual-pointmaze-giant-navigate-v0.npz --dataset_type=navigate --num_episodes=500 --max_episode_steps=2001 --noise=0.5
+# python generate_locomaze.py --env_name=visual-pointmaze-giant-v0 --save_path=data/visual-pointmaze-giant-navigate-v0.npz --dataset_type=navigate --num_episodes=1 --max_episode_steps=2001 --noise=0.5
 import glob
 import json
 from collections import defaultdict
