@@ -1,8 +1,13 @@
+'''
+Reference
+https://github.com/AntixK/PyTorch-VAE/tree/master
+'''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from typing import List, Callable, Union, Any, TypeVar, Tuple
 Tensor = TypeVar('torch.tensor')
+
 
 class BetaVAE(nn.Module):
 
@@ -16,7 +21,6 @@ class BetaVAE(nn.Module):
         super(BetaVAE, self).__init__()
 
         self.latent_dim = latent_dim
-        self.beta = beta
         self.kld_weight = kld_weight
         modules = []
         hidden_dims = [32, 64, 128, 256, 512]

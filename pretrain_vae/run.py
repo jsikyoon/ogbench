@@ -3,17 +3,22 @@ from torch.utils.data import DataLoader
 from dataset import VOGMaze2dOfflineRLDataset
 from bvae import BetaVAE
 from tqdm import tqdm
+import argparse
 
 # configs
-config = {
-    "num_epochs": 20,
-    "batch_size": 4096,
-    "lr": 1e-5,
-    "seed": 42,
-    "device": "cuda" if torch.cuda.is_available() else "cpu",
-    "name": "beta_vae",
-    "load": None
-}
+parser = argparse.ArgumentParser(description='Beta VAE Training Configuration')
+
+parser.add_argument('--num_epochs', type=int, default=500, help='Number of epochs')
+parser.add_argument('--batch_size', type=int, default=128, help='Batch size')
+parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate')
+parser.add_argument('--seed', type=int, default=42, help='Random seed')
+parser.add_argument('--device', type=str, default='cuda' if torch.cuda.is_available() else 'cpu', help='Device to use')
+parser.add_argument('--name', type=str, default='beta_vae', help='Model name')
+parser.add_argument('--load', type=str, default=None, help='Path to load model')
+parser.add_argument('--kld_weight', type=float, default=1e-6, help='KLD weight')
+
+args = parser.parse_args()
+config = vars(args)
 
 
 # set seed
@@ -33,6 +38,8 @@ validation_dataset = VOGMaze2dOfflineRLDataset(split='validation')
 train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True)
 validation_loader = DataLoader(validation_dataset, batch_size=config["batch_size"], shuffle=False)
 
+print("Dataset loaded")
+
 # Initialize the model
 model = BetaVAE()
 model.to(config["device"])
@@ -45,12 +52,13 @@ if config["load"]:
 optimizer = torch.optim.Adam(model.parameters(), lr=config["lr"])
 
 # Train
+print("Training started")
 for epoch in tqdm(range(config["num_epochs"])):
     model.train()
-    for i, batch in enumerate(train_loader):
-        batch = batch["observations"].to(config["device"])
+    for i, (obs, pos) in enumerate(train_loader):
+        obs = obs.to(config["device"])
         optimizer.zero_grad()
-        recons, inputs, mu, log_var = model(batch)
+        recons, inputs, mu, log_var = model(obs)
         loss_dict = model.loss_function(recons, inputs, mu, log_var)
         loss = loss_dict["loss"]
         loss.backward()
@@ -66,16 +74,15 @@ for epoch in tqdm(range(config["num_epochs"])):
     # Validation
     model.eval()
     with torch.no_grad():
-        for i, batch in enumerate(validation_loader):
-            pos = batch["pos"]
-            batch = batch["observations"]
-            batch = batch.to(config["device"])
-            recons, inputs, mu, log_var = model(batch)
+        for i, (obs, pos) in enumerate(validation_loader):            
+            obs = obs.to(config["device"])
+            recons, inputs, mu, log_var = model(obs)
             loss_dict = model.loss_function(recons, inputs, mu, log_var)
             if i == 0:
-                # select random indicies 
-                idx = torch.randint(0, batch.size(0), (8,))
+                pos = pos.to(config["device"])
 
+                # select random indicies 
+                idx = torch.randint(0, obs.size(0), (32,))
                 base = idx[0]
                 emb_dist_list = []
                 pos_dist_list = []
@@ -87,13 +94,15 @@ for epoch in tqdm(range(config["num_epochs"])):
                 # calculate the correlation between the distances
                 emb_dist_list = torch.tensor(emb_dist_list)
                 pos_dist_list = torch.tensor(pos_dist_list)
-                corr = torch.corrcoef(emb_dist_list, pos_dist_list)
+                # corr = torch.corrcoef(emb_dist_list, pos_dist_list)
+                # wandb.log({"corr": corr[0, 1]})
+                corr = torch.corrcoef(torch.stack([emb_dist_list, pos_dist_list]))
                 wandb.log({"corr": corr[0, 1]})
                 print("Correlation between the distances:", corr[0, 1])
 
                 # log the base input and reconstruction
-                inputs = inputs[idx]
-                recons = recons[idx]
+                inputs = inputs[idx[:8]]
+                recons = recons[idx[:8]]
                 inputs = inputs * 71.0288272312382 + 141.785487953533
                 recons = recons * 71.0288272312382 + 141.785487953533
                 wandb.log({"input": wandb.Image(inputs)})
@@ -105,6 +114,8 @@ for epoch in tqdm(range(config["num_epochs"])):
         print("Epoch:", epoch ,k+'val', ":", v, end=", ")
 
     # Save the model with time
-    import datetime
-    torch.save(model.state_dict(), f"beta_vae_{datetime.datetime.now()}.pth")
+    if epoch % 100 == 0:
+        torch.save(model.state_dict(), f"loss{loss_dict['Reconstruction_Loss']}_{config['kld_weight']}_lr_{config['lr']}_{epoch}.pth")
+torch.save(model.state_dict(), f"loss{loss_dict['Reconstruction_Loss']}_{config['kld_weight']}_lr_{config['lr']}_last.pth")
+
 
