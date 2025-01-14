@@ -9,7 +9,7 @@ from typing import List, Callable, Union, Any, TypeVar, Tuple
 Tensor = TypeVar('torch.tensor')
 
 
-class BetaVAE(nn.Module):
+class AE(nn.Module):
 
     num_iter = 0 # Global static variable to keep track of iterations
 
@@ -18,7 +18,7 @@ class BetaVAE(nn.Module):
                  latent_dim= 8,
                  kld_weight= 1e-6,
                  ) -> None:
-        super(BetaVAE, self).__init__()
+        super(AE, self).__init__()
 
         self.latent_dim = latent_dim
         self.kld_weight = kld_weight
