@@ -23,7 +23,7 @@ class BetaVAE(nn.Module):
         self.latent_dim = latent_dim
         self.kld_weight = kld_weight
         modules = []
-        hidden_dims = [32, 64, 128, 256, 512]
+        hidden_dims = [64, 256, 256, 512, 512]
 
         # Build Encoder
         for h_dim in hidden_dims:
@@ -58,7 +58,12 @@ class BetaVAE(nn.Module):
         # Build Decoder
         modules = []
 
-        self.decoder_input = nn.Linear(latent_dim, hidden_dims[-1] * 4)
+        self.decoder_input = nn.Sequential(
+            nn.Linear(latent_dim,hidden_dims[-1]),
+            nn.BatchNorm1d(hidden_dims[-1]),
+            nn.LeakyReLU(),
+            nn.Linear(hidden_dims[-1], hidden_dims[-1]*4)
+        )
 
         hidden_dims.reverse()
 

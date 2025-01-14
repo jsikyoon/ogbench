@@ -116,7 +116,7 @@ for epoch in tqdm(range(config["num_epochs"])):
 
     # Save the model with time
     if epoch % 10 == 0:
-        torch.save(model.state_dict(), f"loss{loss_dict['Reconstruction_Loss']}_{config['kld_weight']}_lr_{config['lr']}_{epoch}.pth")
-torch.save(model.state_dict(), f"loss{loss_dict['Reconstruction_Loss']}_{config['kld_weight']}_lr_{config['lr']}_last.pth")
+        torch.save(model.state_dict(), f"loss{loss_dict['Reconstruction_Loss']}_largest_{config['kld_weight']}_lr_{config['lr']}_{epoch}.pth")
+torch.save(model.state_dict(), f"loss{loss_dict['Reconstruction_Loss']}_largest_{config['kld_weight']}_lr_{config['lr']}_last.pth")
 
 
