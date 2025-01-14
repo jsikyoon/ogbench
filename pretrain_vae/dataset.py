@@ -14,13 +14,13 @@ class VOGMaze2dOfflineRLDataset(torch.utils.data.Dataset):
         - Action std:  [0.70124096 0.6971626]
     '''
         
-    def __init__(self, dataset_url='./dataset/visual-pointmaze-giant-navigate-v0.npz' , split: str = "training"):
+    def __init__(self, dataset_url='./dataset/visual-pointmaze-medium-navigate-v0.npz' , split: str = "training"):
         
         super().__init__()
         self.dataset_url = dataset_url
         self.split = split
         dataset = self.get_dataset(self.dataset_url)
-        self.observations = dataset["observations"].transpose(0, 3, 1, 2) # (1000500, 64, 64, 3) -> (1000500, 3, 64, 64)
+        self.observations = dataset["observations"]
         self.pos = dataset["qpos"]
 
         # Normalizations
@@ -29,7 +29,7 @@ class VOGMaze2dOfflineRLDataset(torch.utils.data.Dataset):
         self.observations = (self.observations - self.obs_mean) / self.obs_std
 
     def __getitem__(self, idx):
-        observation = torch.from_numpy(self.observations[idx]).float() # (episode_len, obs_dim)
+        observation = torch.from_numpy(self.observations[idx]).float().permute(2, 0, 1)  # 변환 # (episode_len, obs_dim)
         pos = torch.from_numpy(self.pos[idx]).float()
         return observation, pos
     
@@ -39,6 +39,6 @@ class VOGMaze2dOfflineRLDataset(torch.utils.data.Dataset):
     def get_dataset(self, path):
         if self.split == "validation":
             path = path.replace(".npz", "-val.npz")
-        dataset = np.load(path)
+        dataset = np.load(path, allow_pickle=True, mmap_mode='r')  # 메모리 매핑 적용
         return dataset
     

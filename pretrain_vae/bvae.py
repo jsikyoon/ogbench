@@ -15,7 +15,7 @@ class BetaVAE(nn.Module):
 
     def __init__(self,
                  in_channels= 3,
-                 latent_dim= 16,
+                 latent_dim= 8,
                  kld_weight= 1e-6,
                  ) -> None:
         super(BetaVAE, self).__init__()
@@ -32,22 +32,26 @@ class BetaVAE(nn.Module):
                     nn.Conv2d(in_channels, out_channels=h_dim,
                               kernel_size= 3, stride= 2, padding  = 1),
                     nn.BatchNorm2d(h_dim),
+                    nn.LeakyReLU(),
+                    nn.Conv2d(h_dim, out_channels=h_dim,
+                              kernel_size= 3, stride=1, padding=1),
+                    nn.BatchNorm2d(h_dim),
                     nn.LeakyReLU())
             )
             in_channels = h_dim
 
         self.encoder = nn.Sequential(*modules)
         self.fc_mu = nn.Sequential(
-            nn.Linear(hidden_dims[-1]*4, hidden_dims[-1]*4),
-            nn.BatchNorm1d(hidden_dims[-1]*4),
+            nn.Linear(hidden_dims[-1]*4, hidden_dims[-1]),
+            nn.BatchNorm1d(hidden_dims[-1]),
             nn.LeakyReLU(),
-            nn.Linear(hidden_dims[-1]*4, latent_dim)
+            nn.Linear(hidden_dims[-1], latent_dim)
         )
         self.fc_var = nn.Sequential(
-            nn.Linear(hidden_dims[-1]*4, hidden_dims[-1]*4),
-            nn.BatchNorm1d(hidden_dims[-1]*4),
+            nn.Linear(hidden_dims[-1]*4, hidden_dims[-1]),
+            nn.BatchNorm1d(hidden_dims[-1]),
             nn.LeakyReLU(),
-            nn.Linear(hidden_dims[-1]*4, latent_dim)
+            nn.Linear(hidden_dims[-1], latent_dim)
         )
 
 

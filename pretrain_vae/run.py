@@ -8,7 +8,7 @@ import argparse
 # configs
 parser = argparse.ArgumentParser(description='Beta VAE Training Configuration')
 
-parser.add_argument('--num_epochs', type=int, default=500, help='Number of epochs')
+parser.add_argument('--num_epochs', type=int, default=200, help='Number of epochs')
 parser.add_argument('--batch_size', type=int, default=128, help='Batch size')
 parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate')
 parser.add_argument('--seed', type=int, default=42, help='Random seed')
@@ -16,6 +16,7 @@ parser.add_argument('--device', type=str, default='cuda' if torch.cuda.is_availa
 parser.add_argument('--name', type=str, default='beta_vae', help='Model name')
 parser.add_argument('--load', type=str, default=None, help='Path to load model')
 parser.add_argument('--kld_weight', type=float, default=1e-6, help='KLD weight')
+parser.add_argument('--group_name', type=str, default='larger_v0_latent_8', help='gropu name')
 
 args = parser.parse_args()
 config = vars(args)
@@ -114,7 +115,7 @@ for epoch in tqdm(range(config["num_epochs"])):
         print("Epoch:", epoch ,k+'val', ":", v, end=", ")
 
     # Save the model with time
-    if epoch % 100 == 0:
+    if epoch % 10 == 0:
         torch.save(model.state_dict(), f"loss{loss_dict['Reconstruction_Loss']}_{config['kld_weight']}_lr_{config['lr']}_{epoch}.pth")
 torch.save(model.state_dict(), f"loss{loss_dict['Reconstruction_Loss']}_{config['kld_weight']}_lr_{config['lr']}_last.pth")
 
