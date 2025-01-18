@@ -6,3 +6,10 @@ dist/
 .DS_Store
 .idea/
 .ruff_cache/
+dataset/
+taming/
+lightning_logs/
+logs/
+wandb/
+data/
+*.pth
