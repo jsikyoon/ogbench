@@ -62,7 +62,6 @@ def load_dataset(dataset_path, ob_dtype=np.float32, action_dtype=np.float32, com
         new_terminals = np.concatenate([dataset['terminals'][1:], [1.0]])
         dataset['terminals'] = np.minimum(dataset['terminals'] + new_terminals, 1.0).astype(np.float32)
     else:
-        raise NotImplementedError(f"compact_dataset={compact_dataset} is not supported.")
         # Regular dataset: Generate `next_observations` by shifting `observations`.
         # Our goal is to have the following structure:
         #                       |<- traj 1 ->|  |<- traj 2 ->|  ...
@@ -79,6 +78,9 @@ def load_dataset(dataset_path, ob_dtype=np.float32, action_dtype=np.float32, com
         dataset['actions'] = dataset['actions'][ob_mask]
         new_terminals = np.concatenate([dataset['terminals'][1:], [1.0]])
         dataset['terminals'] = new_terminals[ob_mask].astype(np.float32)
+        for key in dataset.keys():
+            if key not in ['observations', 'actions', 'next_observations', 'terminals']:
+                dataset[key] = dataset[key][ob_mask]
 
     return dataset
 

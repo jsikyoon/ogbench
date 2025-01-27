@@ -65,6 +65,8 @@ def make_maze_env(loco_env_type, maze_env_type, *args, **kwargs):
             self._add_noise_to_goal = add_noise_to_goal
             assert ob_type in ['states', 'pixels']
 
+            self.seed = 0
+
             # Define constants.
             self._offset_x = 4
             self._offset_y = 4
@@ -326,19 +328,19 @@ def make_maze_env(loco_env_type, maze_env_type, *args, **kwargs):
             else:
                 raise ValueError(f'Unknown maze type: {self._maze_type}')
 
-            # More diverse task generation based on the maze map
-            visitable_positions = []
-            for i in range(self.maze_map.shape[0]):
-                for j in range(self.maze_map.shape[1]):
-                    if self.maze_map[i, j] == 0:
-                        visitable_positions.append((i, j))
-            # Combinations
-            tasks = []
-            for i in range(len(visitable_positions)):
-                for j in range(i + 1, len(visitable_positions)):
-                    tasks.append([visitable_positions[i], visitable_positions[j]])
-                    tasks.append([visitable_positions[j], visitable_positions[i]])
-            print(f"The number of tasks is {len(tasks)}. The Task ID should be in [1, {len(tasks)}].")
+            ## More diverse task generation based on the maze map
+            #visitable_positions = []
+            #for i in range(self.maze_map.shape[0]):
+            #    for j in range(self.maze_map.shape[1]):
+            #        if self.maze_map[i, j] == 0:
+            #            visitable_positions.append((i, j))
+            ## Combinations
+            #tasks = []
+            #for i in range(len(visitable_positions)):
+            #    for j in range(i + 1, len(visitable_positions)):
+            #        tasks.append([visitable_positions[i], visitable_positions[j]])
+            #        tasks.append([visitable_positions[j], visitable_positions[i]])
+            #print(f"The number of tasks is {len(tasks)}. The Task ID should be in [1, {len(tasks)}].")
 
             self.task_infos = []
             for i, task in enumerate(tasks):
@@ -357,6 +359,9 @@ def make_maze_env(loco_env_type, maze_env_type, *args, **kwargs):
             self.cur_task_id = task_id
             self.cur_task_info = self.task_infos[task_id - 1]
             print(f'Task {task_id} is set: {self.cur_task_info}')
+
+        #def set_seed(self, seed):
+        #    self.seed = seed
 
         def reset(self, options=None, *args, **kwargs):
             if options is None:
